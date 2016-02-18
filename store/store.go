@@ -12,6 +12,7 @@ import (
 	"github.com/admpub/sessions"
 	"github.com/boltdb/bolt"
 	"github.com/gorilla/securecookie"
+	"github.com/webx-top/echo"
 )
 
 // Store represents a session store.
@@ -24,20 +25,20 @@ type Store struct {
 // Get returns a session for the given name after adding it to the registry.
 //
 // See gorilla/sessions FilesystemStore.Get().
-func (s *Store) Get(r *http.Request, name string) (*sessions.Session, error) {
-	return sessions.GetRegistry(r).Get(s, name)
+func (s *Store) Get(ctx echo.Context, name string) (*sessions.Session, error) {
+	return sessions.GetRegistry(ctx).Get(s, name)
 }
 
 // New returns a session for the given name without adding it to the registry.
 //
 // See gorilla/sessions FilesystemStore.New().
-func (s *Store) New(r *http.Request, name string) (*sessions.Session, error) {
+func (s *Store) New(ctx echo.Context, name string) (*sessions.Session, error) {
 	var err error
 	session := sessions.NewSession(s, name)
 	session.Options = &s.config.SessionOptions
 	session.IsNew = true
-	if c, errCookie := r.Cookie(name); errCookie == nil {
-		err = securecookie.DecodeMulti(name, c.Value, &session.ID, s.codecs...)
+	if v := ctx.Request().Cookie(name); v != `` {
+		err = securecookie.DecodeMulti(name, v, &session.ID, s.codecs...)
 		if err == nil {
 			ok, err := s.load(session)
 			session.IsNew = !(err == nil && ok) // not new if no error and data available
@@ -47,10 +48,10 @@ func (s *Store) New(r *http.Request, name string) (*sessions.Session, error) {
 }
 
 // Save adds a single session to the response.
-func (s *Store) Save(r *http.Request, w http.ResponseWriter, session *sessions.Session) error {
+func (s *Store) Save(ctx echo.Context, session *sessions.Session) error {
 	if session.Options.MaxAge < 0 {
 		s.delete(session)
-		http.SetCookie(w, sessions.NewCookie(session.Name(), "", session.Options))
+		ctx.Response().SetCookie(sessions.NewCookie(session.Name(), "", session.Options))
 	} else {
 		// Build an alphanumeric ID.
 		if session.ID == "" {
@@ -63,7 +64,7 @@ func (s *Store) Save(r *http.Request, w http.ResponseWriter, session *sessions.S
 		if err != nil {
 			return err
 		}
-		http.SetCookie(w, sessions.NewCookie(session.Name(), encoded, session.Options))
+		ctx.Response().SetCookie(sessions.NewCookie(session.Name(), encoded, session.Options))
 	}
 	return nil
 }
