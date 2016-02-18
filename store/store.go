@@ -5,7 +5,6 @@ import (
 	"encoding/base32"
 	"encoding/gob"
 	"github.com/gogo/protobuf/proto"
-	"net/http"
 	"strings"
 
 	"github.com/admpub/boltstore/shared"
