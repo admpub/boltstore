@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/admpub/boltstore/shared"
 	"github.com/boltdb/bolt"
-	"github.com/yosssi/boltstore/shared"
 )
 
 //##############//

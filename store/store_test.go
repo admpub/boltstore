@@ -11,10 +11,10 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/admpub/boltstore/shared"
+	"github.com/admpub/sessions"
 	"github.com/boltdb/bolt"
 	"github.com/gorilla/securecookie"
-	"github.com/gorilla/sessions"
-	"github.com/yosssi/boltstore/shared"
 )
 
 var benchmarkDB = fmt.Sprintf("benchmark_store_%d.db", time.Now().Unix())

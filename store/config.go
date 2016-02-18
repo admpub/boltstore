@@ -1,8 +1,8 @@
 package store
 
 import (
-	"github.com/gorilla/sessions"
-	"github.com/yosssi/boltstore/shared"
+	"github.com/admpub/boltstore/shared"
+	"github.com/admpub/sessions"
 )
 
 // Config represents a config for a session store.

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/admpub/boltstore/shared"
 	"github.com/boltdb/bolt"
-	"github.com/yosssi/boltstore/shared"
 )
 
 func TestRun(t *testing.T) {
