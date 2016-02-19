@@ -12,6 +12,7 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/gorilla/securecookie"
 	"github.com/webx-top/echo"
+	"github.com/webx-top/echo/engine"
 )
 
 // Store represents a session store.
@@ -31,12 +32,12 @@ func (s *Store) Get(ctx echo.Context, name string) (*sessions.Session, error) {
 // New returns a session for the given name without adding it to the registry.
 //
 // See gorilla/sessions FilesystemStore.New().
-func (s *Store) New(ctx echo.Context, name string) (*sessions.Session, error) {
+func (s *Store) New(r engine.Request, name string) (*sessions.Session, error) {
 	var err error
 	session := sessions.NewSession(s, name)
 	session.Options = &s.config.SessionOptions
 	session.IsNew = true
-	if v := ctx.Request().Cookie(name); v != `` {
+	if v := r.Cookie(name); v != `` {
 		err = securecookie.DecodeMulti(name, v, &session.ID, s.codecs...)
 		if err == nil {
 			ok, err := s.load(session)
@@ -47,10 +48,10 @@ func (s *Store) New(ctx echo.Context, name string) (*sessions.Session, error) {
 }
 
 // Save adds a single session to the response.
-func (s *Store) Save(ctx echo.Context, session *sessions.Session) error {
+func (s *Store) Save(r engine.Request, w engine.Response, session *sessions.Session) error {
 	if session.Options.MaxAge < 0 {
 		s.delete(session)
-		ctx.Response().SetCookie(sessions.NewCookie(session.Name(), "", session.Options))
+		w.SetCookie(sessions.NewCookie(session.Name(), "", session.Options))
 	} else {
 		// Build an alphanumeric ID.
 		if session.ID == "" {
@@ -63,7 +64,7 @@ func (s *Store) Save(ctx echo.Context, session *sessions.Session) error {
 		if err != nil {
 			return err
 		}
-		ctx.Response().SetCookie(sessions.NewCookie(session.Name(), encoded, session.Options))
+		w.SetCookie(sessions.NewCookie(session.Name(), encoded, session.Options))
 	}
 	return nil
 }
