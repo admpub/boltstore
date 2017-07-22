@@ -9,9 +9,9 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/admpub/boltstore/shared"
+	"github.com/admpub/securecookie"
 	"github.com/admpub/sessions"
 	"github.com/boltdb/bolt"
-	"github.com/gorilla/securecookie"
 	"github.com/webx-top/echo"
 )
 
@@ -35,10 +35,9 @@ func (s *Store) Get(ctx echo.Context, name string) (*sessions.Session, error) {
 func (s *Store) New(ctx echo.Context, name string) (*sessions.Session, error) {
 	var err error
 	session := sessions.NewSession(s, name)
-	session.Options = &s.config.SessionOptions
 	session.IsNew = true
 	if v := ctx.GetCookie(name); len(v) > 0 {
-		err = securecookie.DecodeMulti(name, v, &session.ID, s.codecs...)
+		err = securecookie.DecodeMultiWithMaxAge(name, v, &session.ID, ctx.CookieOptions().MaxAge, s.codecs...)
 		if err == nil {
 			ok, err := s.load(session)
 			session.IsNew = !(err == nil && ok) // not new if no error and data available
@@ -49,22 +48,22 @@ func (s *Store) New(ctx echo.Context, name string) (*sessions.Session, error) {
 
 // Save adds a single session to the response.
 func (s *Store) Save(ctx echo.Context, session *sessions.Session) error {
-	if session.Options.MaxAge < 0 {
+	if ctx.CookieOptions().MaxAge < 0 {
 		s.delete(session)
-		sessions.SetCookie(ctx, session.Name(), "", session.Options)
+		sessions.SetCookie(ctx, session.Name(), "")
 	} else {
 		// Build an alphanumeric ID.
 		if len(session.ID) == 0 {
 			session.ID = strings.TrimRight(base32.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(32)), "=")
 		}
-		if err := s.save(session); err != nil {
+		if err := s.save(ctx, session); err != nil {
 			return err
 		}
 		encoded, err := securecookie.EncodeMulti(session.Name(), session.ID, s.codecs...)
 		if err != nil {
 			return err
 		}
-		sessions.SetCookie(ctx, session.Name(), encoded, session.Options)
+		sessions.SetCookie(ctx, session.Name(), encoded)
 	}
 	return nil
 }
@@ -112,14 +111,18 @@ func (s *Store) delete(session *sessions.Session) error {
 }
 
 // save stores the session data in the database.
-func (s *Store) save(session *sessions.Session) error {
+func (s *Store) save(ctx echo.Context, session *sessions.Session) error {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	err := enc.Encode(session.Values)
 	if err != nil {
 		return err
 	}
-	data, err := proto.Marshal(shared.NewSession(buf.Bytes(), session.Options.MaxAge))
+	maxAge := ctx.CookieOptions().MaxAge
+	if maxAge == 0 {
+		maxAge = shared.DefaultMaxAge
+	}
+	data, err := proto.Marshal(shared.NewSession(buf.Bytes(), maxAge))
 	if err != nil {
 		return err
 	}
