@@ -46,6 +46,12 @@ func (s *Store) New(ctx echo.Context, name string) (*sessions.Session, error) {
 	return session, err
 }
 
+func (s *Store) Reload(ctx echo.Context, session *sessions.Session) error {
+	ok, err := s.load(session)
+	session.IsNew = !(err == nil && ok) // not new if no error and data available
+	return err
+}
+
 // Save adds a single session to the response.
 func (s *Store) Save(ctx echo.Context, session *sessions.Session) error {
 	if ctx.CookieOptions().MaxAge < 0 {
