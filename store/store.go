@@ -55,7 +55,7 @@ func (s *Store) Reload(ctx echo.Context, session *sessions.Session) error {
 // Save adds a single session to the response.
 func (s *Store) Save(ctx echo.Context, session *sessions.Session) error {
 	if ctx.CookieOptions().MaxAge < 0 {
-		s.delete(session)
+		s.Remove(session.ID)
 		sessions.SetCookie(ctx, session.Name(), "")
 	} else {
 		// Build an alphanumeric ID.
@@ -105,15 +105,11 @@ func (s *Store) load(session *sessions.Session) (bool, error) {
 	return exists, err
 }
 
-// delete removes the key-value from the database.
-func (s *Store) delete(session *sessions.Session) error {
-	err := s.db.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket(s.config.DBOptions.BucketName).Delete([]byte(session.ID))
+// Remove removes the key-value from the database.
+func (s *Store) Remove(sessionID string) error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		return tx.Bucket(s.config.DBOptions.BucketName).Delete([]byte(sessionID))
 	})
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // save stores the session data in the database.
