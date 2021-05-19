@@ -24,3 +24,5 @@ _testmain.go
 
 *.db
 *.out
+go.mod
+go.sum
