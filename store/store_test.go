@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/webx-top/echo/engine/mock"
 
 	"github.com/admpub/boltstore/shared"
+	"github.com/admpub/pp/ppnocolor"
 	"github.com/admpub/securecookie"
 	"github.com/admpub/sessions"
 	"github.com/boltdb/bolt"
@@ -117,13 +119,17 @@ func TestStore_New(t *testing.T) {
 
 	str, err := New(
 		db,
-		Config{},
+		Config{MaxLength: 1024},
 		[]byte("secret-key"),
 	)
 	if err != nil {
 		t.Error(err)
 	}
-
+	result := ppnocolor.Sprintln(str.codecs[0].(*securecookie.SecureCookie))
+	fmt.Println(result)
+	if !strings.Contains(result, `maxLength: 1024,`) {
+		t.Error(`maxLength != 1024`)
+	}
 	req, err := http.NewRequest("GET", "http://localhost:3000/", nil)
 	if err != nil {
 		t.Error(err)
@@ -133,6 +139,9 @@ func TestStore_New(t *testing.T) {
 	ctx.SessionOptions().MaxAge = 1024
 
 	encoded, err := securecookie.EncodeMulti("test", "1", str.codecs...)
+	if err != nil {
+		t.Error(err)
+	}
 
 	req.AddCookie(sessions.NewCookie(ctx, "test", encoded))
 

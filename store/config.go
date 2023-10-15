@@ -8,6 +8,7 @@ import (
 type Config struct {
 	// DBOptions represents options for a database.
 	DBOptions Options
+	MaxLength int
 }
 
 // setDefault sets default to the config.

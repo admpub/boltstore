@@ -139,6 +139,13 @@ func (s *Store) save(ctx echo.Context, session *sessions.Session) error {
 	return err
 }
 
+// MaxLength restricts the maximum length of new sessions to l.
+// If l is 0 there is no limit to the size of a session, use with caution.
+// The default for a new FilesystemStore is 4096.
+func (s *Store) MaxLength(l int) {
+	securecookie.SetMaxLength(s.codecs, l)
+}
+
 // New creates and returns a session store.
 func New(db *bolt.DB, config Config, keyPairs ...[]byte) (*Store, error) {
 	config.setDefault()
@@ -146,6 +153,9 @@ func New(db *bolt.DB, config Config, keyPairs ...[]byte) (*Store, error) {
 		codecs: securecookie.CodecsFromPairs(keyPairs...),
 		config: config,
 		db:     db,
+	}
+	if config.MaxLength > 0 {
+		store.MaxLength(config.MaxLength)
 	}
 	err := db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists(config.DBOptions.BucketName)
