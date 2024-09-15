@@ -11,8 +11,8 @@ import (
 	"github.com/admpub/boltstore/shared"
 	"github.com/admpub/securecookie"
 	"github.com/admpub/sessions"
-	"github.com/boltdb/bolt"
 	"github.com/webx-top/echo"
+	bolt "go.etcd.io/bbolt"
 )
 
 // Store represents a session store.

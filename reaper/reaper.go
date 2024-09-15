@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/admpub/boltstore/shared"
-	"github.com/boltdb/bolt"
+	bolt "go.etcd.io/bbolt"
 )
 
 //##############//

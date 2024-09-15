@@ -19,7 +19,8 @@ import (
 	"github.com/admpub/pp/ppnocolor"
 	"github.com/admpub/securecookie"
 	"github.com/admpub/sessions"
-	"github.com/boltdb/bolt"
+
+	bolt "go.etcd.io/bbolt"
 )
 
 var benchmarkDB = fmt.Sprintf("benchmark_store_%d.db", time.Now().Unix())
