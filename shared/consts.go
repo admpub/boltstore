@@ -4,7 +4,8 @@ import "time"
 
 // Defaults for sessions.Options
 const (
-	DefaultMaxAge = 60 * 60 * 24 * 30 // 30days
+	DefaultMaxAge = 86400 * 30 // 30days
+	EmptyDataAge  = 3600       // 1hour
 )
 
 // Defaults for store.Options

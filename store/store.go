@@ -125,9 +125,14 @@ func (s *Store) save(ctx echo.Context, session *sessions.Session) error {
 	if err != nil {
 		return err
 	}
-	maxAge := ctx.CookieOptions().MaxAge
-	if maxAge == 0 {
-		maxAge = shared.DefaultMaxAge
+	var maxAge int
+	if len(session.Values) == 0 {
+		maxAge = s.config.EmptyDataAge
+	} else {
+		maxAge = ctx.CookieOptions().MaxAge
+		if maxAge == 0 {
+			maxAge = shared.DefaultMaxAge
+		}
 	}
 	data, err := proto.Marshal(shared.NewSession(buf.Bytes(), maxAge))
 	if err != nil {
