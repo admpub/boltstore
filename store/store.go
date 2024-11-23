@@ -125,12 +125,11 @@ func (s *Store) save(ctx echo.Context, session *sessions.Session) error {
 	if err != nil {
 		return err
 	}
-	var maxAge int
-	if len(session.Values) == 0 {
-		maxAge = s.config.EmptyDataAge
-	} else {
-		maxAge = ctx.CookieOptions().MaxAge
-		if maxAge == 0 {
+	maxAge := ctx.CookieOptions().MaxAge
+	if maxAge == 0 {
+		if len(session.Values) == 0 {
+			maxAge = s.config.EmptyDataAge
+		} else {
 			maxAge = shared.DefaultMaxAge
 		}
 	}
